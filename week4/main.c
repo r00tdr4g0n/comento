@@ -4,22 +4,22 @@
 #include <linux/spinlock.h>
 #include <linux/hashtable.h>
 
-#define KEYRINGCTL_DEVICE_NAME				"keyringctl"
-#define KEYRING_DEVICE_NAME					"keyring"
-#define KEYRING_CLASS_NAME					"keyring"
-#define KEYRING_BUF_SIZE					32
-#define KEYRING_MAGIC_NUMBER				'K'
-#define KEYRING_DEVICE_IOCTL_ADD			_IOW(KEYRING_MAGIC_NUMBER, 0, unsigned int)
-#define KEYRING_DEVICE_IOCTL_DEL			_IOW(KEYRING_MAGIC_NUMBER, 1, unsigned int)
+#define KEYRINGCTL_DEVICE_NAME			"keyringctl"
+#define KEYRING_DEVICE_NAME			"keyring"
+#define KEYRING_CLASS_NAME			"keyring"
+#define KEYRING_BUF_SIZE			32
+#define KEYRING_MAGIC_NUMBER			'K'
+#define KEYRING_DEVICE_IOCTL_ADD		_IOW(KEYRING_MAGIC_NUMBER, 0, unsigned int)
+#define KEYRING_DEVICE_IOCTL_DEL		_IOW(KEYRING_MAGIC_NUMBER, 1, unsigned int)
 #define KEYRING_DEVICE_IOCTL_SHOW   		_IO(KEYRING_MAGIC_NUMBER, 2)
-#define KEYRING_HASH_SIZE					10
+#define KEYRING_HASH_SIZE			10
 
 static DEFINE_HASHTABLE(keyring_table, KEYRING_HASH_SIZE);
 static DEFINE_RWLOCK(keyring_device_rwlock);
 
-static int 					keyring_device_major;
-static int					keyring_device_minor;
-static struct class			*keyring_class;
+static int 			keyring_device_major;
+static int			keyring_device_minor;
+static struct class		*keyring_class;
 static struct device 		*keyring_device;
 
 struct keyring_item {
@@ -28,8 +28,8 @@ struct keyring_item {
 	struct hlist_node hash;
 };
 
-static int 	    keyring_device_open(struct inode *inode, struct file *fp);
-static int 	    keyring_device_release(struct inode *inode, struct file *fp);
+static int 	keyring_device_open(struct inode *inode, struct file *fp);
+static int 	keyring_device_release(struct inode *inode, struct file *fp);
 static ssize_t 	keyring_device_read(struct file *fp, char __user *buf, size_t len, loff_t *ppos);
 static ssize_t 	keyring_device_write(struct file *fp, const char __user *buf, size_t len, loff_t *ppos);
 static long     keyring_device_ioctl(struct file *fp, unsigned int cmd, unsigned long arg);
@@ -39,17 +39,17 @@ void            add_item(int key);
 char*           get_item(int key);
 
 static struct   file_operations keyring_device_fops = {
-	.open 		    = keyring_device_open,
-	.release 	    = keyring_device_release,
-	.read		    = keyring_device_read,
-	.write		    = keyring_device_write,
-    .unlocked_ioctl = keyring_device_ioctl,
+	.open 		    	= keyring_device_open,
+	.release 	    	= keyring_device_release,
+	.read		    	= keyring_device_read,
+	.write		    	= keyring_device_write,
+    	.unlocked_ioctl 	= keyring_device_ioctl,
 };
 
 void add_item(int key)
 {
 	struct keyring_item *new_item;
-    new_item = kmalloc(sizeof(struct keyring_item), GFP_KERNEL);
+	new_item = kmalloc(sizeof(struct keyring_item), GFP_KERNEL);
 	new_item->key = key;
 	memset(new_item->data, 0, sizeof(new_item->data));
 	hash_add(keyring_table, &new_item->hash, new_item->key);
@@ -75,7 +75,7 @@ static int keyring_device_open(struct inode *inode, struct file *fp)
 
 static int keyring_device_release(struct inode *inode, struct file *fp)
 {
-    keyring_device_minor = iminor(inode);
+    	keyring_device_minor = iminor(inode);
 	printk(KERN_DEBUG "[%s] %s - minor : %d", KEYRING_DEVICE_NAME, __func__, keyring_device_minor);
 	return 0;
 }
@@ -85,7 +85,7 @@ static ssize_t keyring_device_read(struct file *fp, char __user *buf, size_t len
 	int 	written_bytes = 0;
 	char*	key_data = 0; 
 
-    if (keyring_device_minor == 0) return -EINVAL;
+   	if (keyring_device_minor == 0) return -EINVAL;
 
 	printk(KERN_DEBUG "[%s] %s - minor : %d", KEYRING_DEVICE_NAME, __func__, keyring_device_minor);
 
@@ -112,7 +112,7 @@ static ssize_t keyring_device_write(struct file *fp, const char __user *buf, siz
 	int 	read_bytes = 0;
 	char* 	key_data = 0;
 
-    if (keyring_device_minor == 0) return -EINVAL;
+	if (keyring_device_minor == 0) return -EINVAL;
 
 	printk(KERN_DEBUG "[%s] %s", KEYRING_DEVICE_NAME, __func__);
 
@@ -133,21 +133,21 @@ static ssize_t keyring_device_write(struct file *fp, const char __user *buf, siz
 
 static long keyring_device_ioctl(struct file *fp, unsigned int cmd, unsigned long arg)
 {
-	int 		ret = 0;
-	int			num = *(int *)arg;
+	int	ret = 0;
+	int	num = *(int *)arg;
 
-    if (_IOC_TYPE(cmd) != KEYRING_MAGIC_NUMBER) return -EINVAL;
+    	if (_IOC_TYPE(cmd) != KEYRING_MAGIC_NUMBER) return -EINVAL;
 
-    if (keyring_device_minor) return -EINVAL;
+    	if (keyring_device_minor) return -EINVAL;
 
-    if (!arg) {
-        printk(KERN_ERR "Invalid value entered, 0 is not allowed.");
-        return -1;
-    }
+    	if (!arg) {
+        	printk(KERN_ERR "Invalid value entered, 0 is not allowed.");
+        	return -1;
+    	}
 
 	switch (cmd) {
 		case KEYRING_DEVICE_IOCTL_ADD:
-    		ret = create_keyring_device(num);	
+    			ret = create_keyring_device(num);	
 			break;
 		case KEYRING_DEVICE_IOCTL_DEL:
 			delete_keyring_device(num);
@@ -157,7 +157,6 @@ static long keyring_device_ioctl(struct file *fp, unsigned int cmd, unsigned lon
 			break;
 		default:
 			return -EINVAL;
-            break;
 	}
 
 	return ret;
@@ -176,8 +175,8 @@ int create_keyring_device(unsigned int num)
 		unregister_chrdev(keyring_device_major, KEYRING_DEVICE_NAME);
 		class_destroy(keyring_class);
 		
-        return PTR_ERR(keyring_device);
-    }
+        	return PTR_ERR(keyring_device);
+    	}
     
 	add_item(num);
 	printk(KERN_DEBUG "[%s] Add keyring%d", KEYRING_DEVICE_NAME, num);
@@ -195,7 +194,7 @@ void delete_keyring_device(unsigned int num)
 
 	device_destroy(keyring_class, MKDEV(keyring_device_major, num));
 
-    printk(KERN_DEBUG "[%s] Delete keyring%d", KEYRING_DEVICE_NAME, num);
+    	printk(KERN_DEBUG "[%s] Delete keyring%d", KEYRING_DEVICE_NAME, num);
 }
 
 static int __init keyring_module_init(void)
@@ -211,34 +210,34 @@ static int __init keyring_module_init(void)
 		goto err_register;
 	}
 
-    keyring_class = class_create(THIS_MODULE, KEYRING_CLASS_NAME);
+    	keyring_class = class_create(THIS_MODULE, KEYRING_CLASS_NAME);
 
 	if (IS_ERR(keyring_class)) {
 		goto err_class;
 	}
 
-    keyring_device = device_create(
-					keyring_class,
-					NULL,
-					MKDEV(keyring_device_major, minor),
-					NULL,
-					"%s", KEYRINGCTL_DEVICE_NAME);
+    	keyring_device = device_create(
+				keyring_class,
+				NULL,
+				MKDEV(keyring_device_major, minor),
+				NULL,
+				"%s", KEYRINGCTL_DEVICE_NAME);
 
-    if (IS_ERR(keyring_device)) {
-        goto err_device;
-    }
+    	if (IS_ERR(keyring_device)) {
+        	goto err_device;
+    	}
 
 	return ret;
 
 err_device:
-    printk(KERN_ERR "[%s] Failed to create device", KEYRING_DEVICE_NAME);
+    	printk(KERN_ERR "[%s] Failed to create device", KEYRING_DEVICE_NAME);
 	class_destroy(keyring_class);
 	ret = PTR_ERR(keyring_device);
 
 err_class:
-    printk(KERN_ERR "[%s] Failed to create class", KEYRING_DEVICE_NAME);		
+    	printk(KERN_ERR "[%s] Failed to create class", KEYRING_DEVICE_NAME);		
 	unregister_chrdev(keyring_device_major, KEYRING_DEVICE_NAME);
-    ret = PTR_ERR(keyring_class);
+    	ret = PTR_ERR(keyring_class);
 
 err_register:
 	return ret;
